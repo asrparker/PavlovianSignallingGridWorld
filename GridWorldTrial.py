@@ -13,7 +13,7 @@ indexLast = 4
 x = 0
 indexIncrease = True
 
-threshold = 0.75
+threshold = 0.4
 
 c = 0
 clast = 0
