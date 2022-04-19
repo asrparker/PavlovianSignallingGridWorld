@@ -78,20 +78,20 @@ while cycle <= 100:
     # get command
     indexLast = index
 
-    # if agent_TD.predict > 0.75 or index == upper_contact:
+    # if agent_TD.predict > threshold or index == upper_contact:
     #     indexIncrease = False
-    # elif agent_TD.predict > 0.75 or index == lower_contact:
+    # elif agent_TD.predict > threshold or index == lower_contact:
     #     indexIncrease = True
-    if agent_up.predict > threshold or index == upper_contact:
+    if (agent_up.predict > threshold and indexIncrease is False) or index == upper_contact:
         indexIncrease = False
         cycle += 1
-    elif agent_down.predict > threshold or index == lower_contact:
+    elif (agent_down.predict > threshold and indexIncrease is False) or index == lower_contact:
         indexIncrease = True
         cycle += 1
 
-    if indexIncrease is True and index < upper_contact:
+    if indexIncrease is True:
         index += 1
-    elif indexIncrease is False and index > lower_contact:
+    elif indexIncrease is False:
         index -= 1
 
     if index == upper_contact or index == lower_contact:
@@ -101,10 +101,12 @@ while cycle <= 100:
         c = 0
         contact = 0
 
-    # if agent_TD.predict > 0.75:
+    # if agent_TD.predict > threshold:
     #     prediction = 1
-    if agent_up.predict > threshold or agent_down.predict > threshold:
+    if agent_up.predict > threshold and indexIncrease is True:
         prediction = 1
+    elif agent_down.predict > threshold and indexIncrease is False:
+        prediction = 2
     else:
         prediction = 0
 
@@ -121,22 +123,21 @@ while cycle <= 100:
         # print(index, downC, timeSince_downC)
         # print(datetime.datetime.now())
 
-    ac = abs(c)
-
     # find active feature
-    feature = index
+    feature = 100
     # move index to a higher part of the space for moving down or being still
-    if index < indexLast:
-        feature += direction_size
-    elif index == indexLast:
-        feature += 2 * direction_size
-    S.update_state(int(feature))
+    if indexIncrease is True:
+        feature = index
+    elif indexIncrease is False:
+        feature = index + direction_size
+    else:
+        feature = index + (2 * direction_size)
 
     agent_TD.update(c, S.state_vector, rho=1)
-    if (feature >= 0) and (feature < direction_size):
+    if indexIncrease is True:
         agent_up.update(c, S.state_vector, rho=1)
         agent_down.update(c, S.state_vector, rho=0)
-    elif (feature >= direction_size) and (feature < direction_size * 2):
+    elif indexIncrease is False:
         agent_up.update(c, S.state_vector, rho=0)
         agent_down.update(c, S.state_vector, rho=1)
     else:
@@ -145,7 +146,7 @@ while cycle <= 100:
 
     # observe.update(x, [index, agent_up.predict, agent_down.predict, agent_up.delta, agent_down.delta])
     # time.sleep(.000001)
-
+    
     writer.writerow([cycle, index, contact, prediction])
 
     x += 1

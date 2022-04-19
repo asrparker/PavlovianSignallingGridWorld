@@ -12,7 +12,7 @@ indexLast = 4
 x = 0
 indexIncrease = True
 
-threshold = 0.75
+threshold = 400
 
 c = 0
 clast = 0
@@ -66,14 +66,14 @@ try:
         # get command
         indexLast = index
 
-        if agent_up.predict > threshold or index == upper_contact:
+        if (indexIncrease is True and agent_up.predict > threshold) or index == upper_contact:
             indexIncrease = False
-        elif agent_down.predict > threshold or index == lower_contact:
+        elif (indexIncrease is False and agent_down.predict > threshold) or index == lower_contact:
             indexIncrease = True
 
-        if indexIncrease is True and index < upper_contact:
+        if indexIncrease is True:
             index = index + 1
-        elif indexIncrease is False and index > lower_contact:
+        elif indexIncrease is False:
             index = index - 1
 
         if index == upper_contact or index == lower_contact:
@@ -94,21 +94,20 @@ try:
             print(index, downC, timeSince_downC)
             print(datetime.datetime.now())
 
-        ac = abs(c)
-
         # find active feature
-        feature = index
+        feature = 100
         # move index to a higher part of the space for moving down or being still
-        if index < indexLast:
-            feature += direction_size
-        elif index == indexLast:
-            feature += 2 * direction_size
-        S.update_state(int(feature))
+        if indexIncrease is True:
+            feature = index
+        elif indexIncrease is False:
+            feature = index + direction_size
+        else:
+            feature = index + (2 * direction_size)
 
-        if (feature >= 0) and (feature < direction_size):
+        if indexIncrease is True:
             agent_up.update(c, S.state_vector, rho=1)
             agent_down.update(c, S.state_vector, rho=0)
-        elif (feature >= direction_size) and (feature < direction_size * 2):
+        elif indexIncrease is False:
             agent_up.update(c, S.state_vector, rho=0)
             agent_down.update(c, S.state_vector, rho=1)
         else:
