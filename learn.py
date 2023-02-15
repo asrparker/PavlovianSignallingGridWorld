@@ -1,4 +1,5 @@
 import numpy as np
+import random
 import math
 
 #from lib_robotis_hack import *
@@ -199,23 +200,23 @@ class Sarsa:
 		self.reset(size,numactions)
 		
 	def get_action_egreedy(self,x,epsilon):
-		v = numpy.zeros(self.numactions)
+		v = np.zeros(self.numactions)
 		# Compute action values for each action
 		for i in range(0,self.numactions):	
-			v[i] = numpy.dot(x, (self.w[:,i]).flatten())
+			v[i] = np.dot(x, (self.w[:,i]).flatten())
 		# Perform e-greedy selection
 		if random.random() > epsilon:
-			a = numpy.argmax(v)
+			a = np.argmax(v)
 		else:
 			a = random.randint(0,self.numactions-1)
 		return a, v
 
 	def get_action_softmax(self,x):
-		v = numpy.zeros(self.numactions)
-		p = numpy.zeros(self.numactions)
+		v = np.zeros(self.numactions)
+		p = np.zeros(self.numactions)
 		# Compute values and probabilities for each action	
 		for i in range(0,self.numactions):	
-			v[i] = numpy.exp(numpy.dot(x, (self.w[:,i]).flatten()))	
+			v[i] = np.exp(np.dot(x, (self.w[:,i]).flatten()))
 		for i in range(0,self.numactions):
 			p[i] = v[i]/v.sum()
 		#Wheel of fortune for action selection
@@ -230,10 +231,10 @@ class Sarsa:
 		return a, p
 		
 	def reset(self,size,numactions):
-		self.xt = numpy.array(numpy.zeros((size,numactions)))
-		self.xtp1 = numpy.array(numpy.zeros((size,numactions)))
-		self.w = numpy.array(numpy.zeros((size,numactions)))
-		self.e = numpy.array(numpy.zeros((size,numactions)))
+		self.xt = np.array(np.zeros((size,numactions)))
+		self.xtp1 = np.array(np.zeros((size,numactions)))
+		self.w = np.array(np.zeros((size,numactions)))
+		self.e = np.array(np.zeros((size,numactions)))
 				
 	def update(self,xt,xtp1,Rtp1,At,Atp1,gamma):
 		self.gamma = gamma

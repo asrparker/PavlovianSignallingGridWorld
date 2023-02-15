@@ -12,7 +12,7 @@ indexLast = 4
 x = 0
 indexIncrease = True
 
-threshold = 400
+threshold = 0.5
 
 c = 0
 clast = 0
@@ -22,6 +22,7 @@ dwnticks = 0
 fup = 0
 fdwn = 0
 
+#counters for number of up/down contacts, time since last contact, time of contact
 upC = 0
 downC = 0
 timeSince_upC = 0
@@ -32,13 +33,13 @@ downTime = 0
 direction_size = 32
 world_size = 3 * direction_size
 
-upper_contact = 31
-lower_contact = 0
+upper_contact = 30
+lower_contact = 1
 
 # learning variables
 gamma = 0.9
 lamb = 0.9
-alpha_W = 0.2  # *(1-lamb)
+alpha_W = 0.1  # *(1-lamb)
 alpha_omega = 0.01
 
 feature = 0
@@ -66,37 +67,42 @@ try:
         # get command
         indexLast = index
 
+        #turn around if prediction or "contact"
         if (indexIncrease is True and agent_up.predict > threshold) or index == upper_contact:
             indexIncrease = False
+
         elif (indexIncrease is False and agent_down.predict > threshold) or index == lower_contact:
             indexIncrease = True
 
+        #adjust position according to direction
         if indexIncrease is True:
             index = index + 1
         elif indexIncrease is False:
             index = index - 1
 
+        #set cummulant to one if contact is made or 0 ir it is not
         if index == upper_contact or index == lower_contact:
             c = 1
         else:
             c = 0
 
+        #contact tracking
         if index == upper_contact:
             upC += 1
             timeSince_upC = time.time() - upTime
             upTime = time.time()
-            print(index, upC, timeSince_upC)
+            print("up contact!", index, upC, timeSince_upC)
             print(datetime.datetime.now())
         elif index == lower_contact:
             downC += 1
             timeSince_downC = time.time() - downTime
             downTime = time.time()
-            print(index, downC, timeSince_downC)
+            print("down contact!", index, downC, timeSince_downC)
             print(datetime.datetime.now())
 
         # find active feature
-        feature = 100
-        # move index to a higher part of the space for moving down or being still
+        feature = 101
+        # move feature index to a higher part of the state space for moving down or being still
         if indexIncrease is True:
             feature = index
         elif indexIncrease is False:
@@ -104,15 +110,20 @@ try:
         else:
             feature = index + (2 * direction_size)
 
-        if indexIncrease is True:
+        S.update_state(feature)
+
+        if indexLast < index:
             agent_up.update(c, S.state_vector, rho=1)
             agent_down.update(c, S.state_vector, rho=0)
-        elif indexIncrease is False:
+        elif indexLast > index:
             agent_up.update(c, S.state_vector, rho=0)
             agent_down.update(c, S.state_vector, rho=1)
         else:
             agent_up.update(c, S.state_vector, rho=0)
             agent_down.update(c, S.state_vector, rho=0)
+
+        observe.update(x, [index, agent_up.predict, agent_down.predict, agent_up.delta, agent_down.delta])
+        time.sleep(.000001)
 
         # if agent_up.predict >= 0.6:
         #     if fup == 0:
@@ -125,8 +136,6 @@ try:
         #         print(time.time() - start)
         #     dwnticks += 1
 
-        observe.update(x, [index, agent_up.predict, agent_down.predict, agent_up.delta, agent_down.delta])
-        time.sleep(.000001)
 
         x += 1
 

@@ -36,7 +36,7 @@ class DynamicPlot():
 
     def __init__(self, title = None, xlabel = None, ylabel = None, window_x = None, num_plots=1):
         plt.ion()
-        self.figure, self.axes = plt.subplots(num_plots,1, sharex=True)
+        self.figure, self.axes = plt.subplots(num_plots, 1, sharex=True)
         # if not isinstance(self.axes, list):
         #     self.axes = [self.axes]
         self.lines = []
